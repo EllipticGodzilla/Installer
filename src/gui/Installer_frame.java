@@ -5,15 +5,12 @@ import download.Downloader;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class Installer_frame {
     private static JFrame frame;
-    public static String path = null;
 
     public static final int DOWNLOAD_CLIENT = 0,
                             DOWNLOAD_SERVER = 1,
@@ -22,33 +19,18 @@ public abstract class Installer_frame {
     public static int to_download;
     public static char[] psw = null;
 
-//    public static JTextField dns_ip,
-//                             ca_pKey,
-//                             sName,
-//                             sIp,
-//                             sLink,
-//                             sMail,
-//                             sCertificate;
-//    private static byte[] prv_key;
-//    public static String pub_key;
-
     /*
     * il valore di progress indica a che punto dell'installazione è arrivato, i suoi valori significano:
-    * 0 -> idle, deve ancora decidere che software installare (se è scelto ca_dns inizia subito a fare il download)
-    *  // se ha scelto client o server
-    * 1 -> deve decidere la password per cifrare i file
-    *  // se ha scelto client
-    * 2 -> inserisce l'indirizzo ip del dns e la chiave pubblica della ca (inizia il download client)
-    *  //se ha scelto server
-    * 3 -> chiede le informazioni di configurazione per il server (inizia il download server)
-    * 4 -> mostra la chiave pubblica del server e aspetta il certificato
-    * pre CA DNS non ci sono index perché non è necessario inserire nessuna informazione
+    * 0 -> mostra la pagina iniziale
+    * 1 -> deve decidere la password per cifrare i file, che software installare, e dove installare
+    *  ! se ha scelto client o ca_dns inizia subito il download, non ha bisogno di altri informazioni
+    *  ! se ha scelto client lascia progress ad 1, altrimenti la mette a 3
+    * 2 -> vuole scaricare il server, chiede le informazioni (nome, ip, ...)
+    *  ! una volta avute lascia progress a 2 ed inizia il download
      */
     private static int progress = 0;
 
-    public static void init(String downloadPath) {
-        path = downloadPath;
-
+    public static void init() {
         //inizializza il frame e Panels_generator
         frame = new JFrame("Godzilla Installer");
         frame.setSize(500, 343);
@@ -116,11 +98,12 @@ public abstract class Installer_frame {
         c.gridx = 0;
         c.gridy = 0;
         c.fill = GridBagConstraints.VERTICAL;
-        c.anchor = GridBagConstraints.PAGE_START;
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
         bottom_panel.add(back, c);
 
         c.insets.left = 0;
         c.gridx = 1;
+        c.anchor = GridBagConstraints.LAST_LINE_END;
         bottom_panel.add(next, c);
 
         c = new GridBagConstraints();
@@ -152,7 +135,7 @@ public abstract class Installer_frame {
                         to_download = Panels_generator.software_dropdown.getSelectedIndex();
 
                         if (to_download == DOWNLOAD_CLIENT) { //scarica il client
-                            Downloader.download_client(path, Panels_generator.first_psw.getPassword());
+                            Downloader.download_client(Panels_generator.first_psw.getPassword());
                         }
                         else if (to_download == DOWNLOAD_SERVER) { //richiede ulteriori informazioni per il server
                             Panels_generator.get_panel(Panels_generator.SETUP_SERVER);
@@ -160,7 +143,7 @@ public abstract class Installer_frame {
                         }
                         else if (to_download == DOWNLOAD_CA_DNS) { //scarica il dns
                             progress = 3; //salta uno che è il setup del server
-                            Downloader.download_ca_dns(path, Panels_generator.first_psw.getPassword());
+                            Downloader.download_ca_dns(Panels_generator.first_psw.getPassword());
                         }
                     }
                     break;
@@ -168,7 +151,6 @@ public abstract class Installer_frame {
                 case 2: //ha inserito le informazioni per scaricare il server
                     if (validate_server()) { //se le informazioni date sono considerate valide
                         Downloader.download_server(
-                                path,
                                 Panels_generator.first_psw.getPassword(),
                                 Panels_generator.nome_field.getText(),
                                 Panels_generator.ip_field.getText(),

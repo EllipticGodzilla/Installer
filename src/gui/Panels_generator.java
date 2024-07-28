@@ -2,6 +2,7 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class Panels_generator {
@@ -16,13 +17,18 @@ public class Panels_generator {
     public static JTextField ip_field,
                              link_field,
                              nome_field,
-                             mail_field;
+                             mail_field,
+                             dpath_field;
     public static JComboBox<String> software_dropdown;
+    public static JFileChooser file_choser;
 
     public static void init() {
         panel = new JPanel();
         panel.setBackground(new Color(58, 61, 63));
         panel.setLayout(new GridBagLayout());
+
+        file_choser = new JFileChooser();
+        file_choser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
     }
 
     public static JPanel get_panel(int index) {
@@ -113,6 +119,24 @@ public class Panels_generator {
 
         JPanel sep2 = new SepPanel();
 
+        JTextField msg6 = new MsgTextField("seleziona la cartella di download");
+        JTextField msg7 = new MsgTextField("path:");
+        dpath_field = new InputTextField(System.getProperty("user.home") + "/.Godzilla");
+        JButton change_path = new JButton();
+
+        dpath_field.setEditable(false); //per cambiarla bisogna utilizzare il JPathChooser
+
+        change_path.setIcon(new ImageIcon(Panels_generator.class.getResource("/images/cpath.png")));
+        change_path.setRolloverIcon(new ImageIcon(Panels_generator.class.getResource("/images/cpath_sel.png")));
+        change_path.setPressedIcon(new ImageIcon(Panels_generator.class.getResource("/images/cpath_pres.png")));
+
+        change_path.setBorder(null);
+
+        change_path.addActionListener(e -> {
+            file_choser.showOpenDialog(panel); //sceglie la cartlla
+            dpath_field.setText(file_choser.getSelectedFile().getPath());
+        });
+
         //aggiunge tutti i componenti al pannello
         GridBagConstraints c = new GridBagConstraints();
 
@@ -128,11 +152,13 @@ public class Panels_generator {
         //seconda linea [ msg2 first_psw show_psw_button ]
         c.gridy = 1;
         c.gridwidth = 1;
+        c.weightx = 0;
         c.insets.right = 10;
         panel.add(msg2, c);
 
         c.gridx = 1;
         c.insets.right = 0;
+        c.weightx = 1;
         panel.add(first_psw, c);
 
         c.gridx = 2;
@@ -140,15 +166,14 @@ public class Panels_generator {
         panel.add(first_psw.get_toggle_button(), c);
 
         //terza linea [ msg3 second_psw show_psw_button ]
-        c.fill = GridBagConstraints.BOTH;
         c.gridy = 2;
         c.gridx = 0;
-        c.weightx = 1;
         c.insets.right = 10;
         panel.add(msg3, c);
 
         c.gridx = 1;
         c.insets.right = 0;
+        c.weightx = 1;
         panel.add(second_psw, c);
 
         c.weightx = 0;
@@ -157,7 +182,6 @@ public class Panels_generator {
 
         //quarta linea [ sep1 ]
         c.weightx = 1;
-        c.fill = GridBagConstraints.BOTH;
         c.gridy = 3;
         c.gridx = 0;
         c.gridwidth = 3;
@@ -188,6 +212,27 @@ public class Panels_generator {
         c.weighty = 1;
         c.gridwidth = 3;
         panel.add(sep2, c);
+
+        //ottava linea [ msg6 ]
+        c.gridy = 7;
+        c.weighty = 0;
+        panel.add(msg6, c);
+
+        //nona linea [ msg7 dpath_field change_path ]
+        c.gridy = 8;
+        c.weightx = 0;
+        c.gridwidth = 1;
+        c.insets.right = 10;
+        panel.add(msg7, c);
+
+        c.gridx = 1;
+        c.weightx = 1;
+        c.insets.right = 0;
+        panel.add(dpath_field, c);
+
+        c.gridx = 2;
+        c.weightx = 0;
+        panel.add(change_path, c);
     }
 
     private static void setup_server_info() {
@@ -280,6 +325,16 @@ class SepPanel extends JPanel {
 
 class InputTextField extends JTextField {
     public InputTextField() {
+        super();
+        init();
+    }
+
+    public InputTextField(String def) {
+        super(def);
+        init();
+    }
+
+    private void init() {
         this.setBackground(new Color(108, 111, 113));
         this.setForeground(new Color(218, 221, 223));
         this.setPreferredSize(new Dimension(150, 18));
@@ -425,5 +480,11 @@ class DownloadDropDown extends JComboBox<String> {
 
             return this;
         }
+    }
+}
+
+class FileChooser extends JFileChooser {
+    public FileChooser() {
+        super();
     }
 }
